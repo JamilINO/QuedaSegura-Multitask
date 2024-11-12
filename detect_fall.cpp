@@ -17,6 +17,7 @@ void detect_fall(void *agrs){
 
   Serial.println("Iniciando RTC...");
   while(!rtc.begin()){}
+  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   for(int i = 0; !rtc.isrunning(); i++){
     Serial.print(i);
     Serial.print("...");
@@ -37,6 +38,7 @@ void detect_fall(void *agrs){
   Serial.println("-- Bem Vindo ao Queda Segura --");
 
   for(;;){
+    /*
     mpu.getEvent(&acelerometer, &gyroscope, &temp);
     Serial.print("aX: ");
     Serial.print(acelerometer.acceleration.x);
@@ -44,12 +46,20 @@ void detect_fall(void *agrs){
     Serial.print(acelerometer.acceleration.y);
     Serial.print(" aZ: ");
     Serial.print(acelerometer.acceleration.z);
-
+*/
     Serial.print(" gX: ");
     Serial.print(gyroscope.gyro.x);
     Serial.print(" gY: ");
     Serial.print(gyroscope.gyro.y);
     Serial.print(" gZ: ");
-    Serial.println(gyroscope.gyro.z);
+    Serial.print(gyroscope.gyro.z);
+
+    DateTime now = rtc.now();
+    Serial.print(" Hora: ");
+    Serial.println(now.hour());
+    Serial.print(":");
+    Serial.print(now.minute());
+    Serial.print(":");
+    Serial.println(now.second());
   }
 }
