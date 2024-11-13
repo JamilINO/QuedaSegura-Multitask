@@ -11,6 +11,7 @@ Adafruit_MPU6050 mpu;
 RTC_DS1307 rtc;
 
 sensors_event_t acelerometer, gyroscope, temp;
+sensors_event_t last_acelerometer, last_gyroscope, temp;
 
 void detect_fall(void *agrs){
   Wire.begin();
@@ -37,29 +38,44 @@ void detect_fall(void *agrs){
 
   Serial.println("-- Bem Vindo ao Queda Segura --");
 
+  mpu.getEvent(&last_acelerometer, &last_gyroscope, &temp);
+  DateTime before = rtc.now();
   for(;;){
-    /*
     mpu.getEvent(&acelerometer, &gyroscope, &temp);
+
     Serial.print("aX: ");
     Serial.print(acelerometer.acceleration.x);
     Serial.print(" aY: ");
     Serial.print(acelerometer.acceleration.y);
     Serial.print(" aZ: ");
     Serial.print(acelerometer.acceleration.z);
-*/
+/*
     Serial.print(" gX: ");
     Serial.print(gyroscope.gyro.x);
     Serial.print(" gY: ");
     Serial.print(gyroscope.gyro.y);
     Serial.print(" gZ: ");
     Serial.print(gyroscope.gyro.z);
-
+*/
     DateTime now = rtc.now();
     Serial.print(" Hora: ");
     Serial.println(now.hour());
     Serial.print(":");
     Serial.print(now.minute());
     Serial.print(":");
-    Serial.println(now.second());
+    Serial.print(now.second());
+
+    Serial.println("");
+
+    if((now - before) > 1000){
+      before = now;
+      last_acelerometer = acelerometer
+      lasr_gyroscope = gyroscope
+      Serial.print(acelerometer.acceleration.x)
+      Serial.print(" - ")
+      Serial.print(last_acelerometer.acceleration.x)
+
+      Serial.print("")
+    }
   }
 }
