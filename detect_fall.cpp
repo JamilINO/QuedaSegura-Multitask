@@ -7,11 +7,15 @@
 
 #include <RTClib.h>
 
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+
 Adafruit_MPU6050 mpu;
 RTC_DS1307 rtc;
+HTTPClient http;
 
 sensors_event_t acelerometer, gyroscope, temp;
-sensors_event_t last_acelerometer, last_gyroscope, temp;
+sensors_event_t last_acelerometer, last_gyroscope, tmp;
 
 void detect_fall(void *agrs){
   Wire.begin();
@@ -39,9 +43,10 @@ void detect_fall(void *agrs){
   Serial.println("-- Bem Vindo ao Queda Segura --");
 
   mpu.getEvent(&last_acelerometer, &last_gyroscope, &temp);
-  DateTime before = rtc.now();
+  //DateTime before = rtc.now();
   for(;;){
     mpu.getEvent(&acelerometer, &gyroscope, &temp);
+/*
 
     Serial.print("aX: ");
     Serial.print(acelerometer.acceleration.x);
@@ -49,33 +54,70 @@ void detect_fall(void *agrs){
     Serial.print(acelerometer.acceleration.y);
     Serial.print(" aZ: ");
     Serial.print(acelerometer.acceleration.z);
-/*
+  
+
     Serial.print(" gX: ");
     Serial.print(gyroscope.gyro.x);
     Serial.print(" gY: ");
     Serial.print(gyroscope.gyro.y);
     Serial.print(" gZ: ");
     Serial.print(gyroscope.gyro.z);
-*/
+  */
     DateTime now = rtc.now();
+/*
     Serial.print(" Hora: ");
-    Serial.println(now.hour());
+    Serial.print(now.hour());
     Serial.print(":");
     Serial.print(now.minute());
     Serial.print(":");
     Serial.print(now.second());
-
-    Serial.println("");
-
-    if((now - before) > 1000){
-      before = now;
-      last_acelerometer = acelerometer
-      lasr_gyroscope = gyroscope
-      Serial.print(acelerometer.acceleration.x)
-      Serial.print(" - ")
-      Serial.print(last_acelerometer.acceleration.x)
-
-      Serial.print("")
+*/
+    int intensity = acelerometer.acceleration.x - last_acelerometer.acceleration.x;
+    if(intensity > 10){
+      Serial.print("aX: ");
+      Serial.print(acelerometer.acceleration.x);
+      Serial.print(" aY: ");
+      Serial.print(acelerometer.acceleration.y);
+      Serial.print(" aZ: ");
+      Serial.print(acelerometer.acceleration.z);
+      Serial.print(" Intensity: ");
+      Serial.print(intensity);
+      Serial.println("");
     }
+
+    Serial.println(acelerometer.acceleration.x);
+    DynamicJsonDocument doc(2048);
+
+    doc["ax"] = acelerometer.acceleration.x;
+    doc["ay"] = acelerometer.acceleration.y;
+    doc["az"] = acelerometer.acceleration.z;
+
+    doc["gx"] = gyroscope.gyro.x;
+    doc["gy"] = gyroscope.gyro.y;
+    doc["gz"] = gyroscope.gyro.z;
+
+    doc["h"] = now.hour();
+    doc["m"] = now.minute();
+    doc["s"] = now.second();
+
+    http.begin("http://192.168.15.77:7777/api");
+
+    String json; 
+    serializeJson(doc, json);
+
+   // Serial.println(json);
+    http.begin("http://192.168.15.77:7777/api");
+    http.addHeader("Content-Type", "application/json");
+    int httpCode = http.POST(json);
+    if (httpCode == HTTP_CODE_OK) {
+
+    }
+    else{
+
+    }
+    http.end();
+    last_acelerometer = acelerometer;
+    last_gyroscope = gyroscope;
+    //Serial.println("");
   }
 }
