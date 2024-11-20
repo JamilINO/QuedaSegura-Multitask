@@ -9,8 +9,7 @@
 
 #include <WiFi.h>
 #include <WiFiClient.h>
-#define WIFI_NAME "VIEIRA-WIFI-2.4.GHZ"
-#define WIFI_PASS "SaNtInHo1!1"
+#include <env.h>
 
 
 void setup() {

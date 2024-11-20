@@ -110,10 +110,10 @@ void detect_fall(void *agrs){
     http.addHeader("Content-Type", "application/json");
     int httpCode = http.POST(json);
     if (httpCode == HTTP_CODE_OK) {
-
+      Serial.print("Hello");
     }
     else{
-
+      Serial.print("Error");
     }
     http.end();
     last_acelerometer = acelerometer;
