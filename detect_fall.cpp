@@ -7,6 +7,7 @@
 
 #include <RTClib.h>
 
+#include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
@@ -22,11 +23,9 @@ void detect_fall(void *agrs){
 
   Serial.println("Iniciando RTC...");
   while(!rtc.begin()){}
-  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  for(int i = 0; !rtc.isrunning(); i++){
-    Serial.print(i);
-    Serial.print("...");
-    delay(100);
+
+  if(!rtc.isrunning()){
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   }
 
   Serial.println("Iniciando acelerometro...");
@@ -83,11 +82,12 @@ void detect_fall(void *agrs){
       Serial.print(" Intensity: ");
       Serial.print(intensity);
       Serial.println("");
-    }
 
-    Serial.println(acelerometer.acceleration.x);
+      /* -- HTTP -- */
+
     DynamicJsonDocument doc(2048);
 
+/*
     doc["ax"] = acelerometer.acceleration.x;
     doc["ay"] = acelerometer.acceleration.y;
     doc["az"] = acelerometer.acceleration.z;
@@ -99,25 +99,71 @@ void detect_fall(void *agrs){
     doc["h"] = now.hour();
     doc["m"] = now.minute();
     doc["s"] = now.second();
+*/
 
-    http.begin("http://192.168.15.77:7777/api");
+   doc["mac_addr"] = WiFi.macAddress();
+   doc["date"] = now.unixtime(); 
+   doc["itensity"] = intensity;
+
+    bool abort = false;
+
+    for(int i = 0; i < 10; i++){
+      digitalWrite(buzzer, HIGH);
+      Serial.print(".");
+
+      if(digitalRead(btn) == HIGH){
+        abort = true;
+        break;
+      }
+
+      delay(500);
+      digitalWrite(buzzer, LOW);
+      if(digitalRead(btn) == HIGH){
+        abort = true;
+        break;
+      }
+
+
+      delay(500);
+    }
+
+    if(abort == true){
+      digitalWrite(buzzer, LOW);
+      intensity = 0;
+      mpu.getEvent(&last_acelerometer, &last_gyroscope, &temp);
+      continue;
+    }
+
+    digitalWrite(buzzer, HIGH);
 
     String json; 
     serializeJson(doc, json);
 
    // Serial.println(json);
-    http.begin("http://192.168.15.77:7777/api");
+    http.begin("http://177.172.103.179:7777/api");
     http.addHeader("Content-Type", "application/json");
     int httpCode = http.POST(json);
     if (httpCode == HTTP_CODE_OK) {
-      Serial.print("Hello");
+      String payload = http.getString();
+      delay(1000);
+      Serial.println(payload);
     }
     else{
-      Serial.print("Error");
+      String payload = http.getString();
+      delay(1000);
+      Serial.println(payload);
+      Serial.println("HTTP Error");
     }
     http.end();
-    last_acelerometer = acelerometer;
-    last_gyroscope = gyroscope;
+    digitalWrite(buzzer, LOW);
+
+    }
+    //delay(1000);
+    Serial.print(acelerometer.acceleration.x);
+    //last_acelerometer = acelerometer;
+    //last_gyroscope = gyroscope;
+
+    mpu.getEvent(&last_acelerometer, &last_gyroscope, &temp);
     //Serial.println("");
   }
 }

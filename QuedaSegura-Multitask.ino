@@ -15,6 +15,9 @@
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
+
+  pinMode(buzzer, OUTPUT);
+  pinMode(btn, INPUT);
   
   WiFi.mode(WIFI_STA);
 
@@ -25,7 +28,6 @@ void setup() {
     delay(100);
     Serial.write(".");
   }
-
 
   xTaskCreate(
     detect_fall,
